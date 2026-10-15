@@ -1,0 +1,156 @@
+{
+  "_comment": "Answer of the GraphQL `me` query, in the shape of the fixtures of pydrawise (tests/conftest.py, Apache 2.0) and of the Home Assistant tests. Ids, names, e-mail and serial numbers are invented. Times are for 2026-10-15T08:00:00Z (1792051200).",
+  "id": 1001,
+  "customerId": 2001,
+  "name": "Test User",
+  "email": "test@example.invalid",
+  "units": { "unitsName": "metric" },
+  "controllers": [
+    {
+      "id": 110001,
+      "name": "Home Controller",
+      "softwareVersion": "s0",
+      "hardware": {
+        "serialNumber": "A0B1C2D3E4",
+        "version": "1.0",
+        "status": "All good!",
+        "model": { "name": "HPC 10", "description": "HPC 10 Station Controller" },
+        "firmware": [{ "type": "A", "version": "1.0" }]
+      },
+      "lastContactTime": { "timestamp": 1792051140, "value": "Thu, 15 Oct 26 07:59:00 +0000" },
+      "lastAction": { "timestamp": 1792051080, "value": "Thu, 15 Oct 26 07:58:00 +0000" },
+      "online": true,
+      "sensors": [
+        {
+          "id": 330001,
+          "name": "Rain sensor ",
+          "model": {
+            "id": 3318,
+            "name": "Rain Sensor (normally closed wire)",
+            "active": true,
+            "offLevel": 1,
+            "offTimer": 0,
+            "delay": 0,
+            "divisor": 0,
+            "flowRate": 0,
+            "sensorType": "LEVEL_CLOSED"
+          },
+          "status": { "waterFlow": null, "active": false }
+        },
+        {
+          "id": 330002,
+          "name": "Flow meter",
+          "model": {
+            "id": 3324,
+            "name": "1, 1½ or 2 inch NPT Flow Meter",
+            "active": true,
+            "offLevel": 0,
+            "offTimer": 0,
+            "delay": 0,
+            "divisor": 0.52834,
+            "flowRate": 3.7854,
+            "sensorType": "FLOW"
+          },
+          "status": { "waterFlow": { "value": 2051.7, "unit": "L" }, "active": null }
+        }
+      ],
+      "zones": [
+        {
+          "id": 220001,
+          "number": { "value": 1, "label": "Zone 1" },
+          "name": "Front Lawn",
+          "scheduledRuns": {
+            "summary": "",
+            "currentRun": null,
+            "nextRun": {
+              "id": "220001-1792054800",
+              "startTime": { "timestamp": 1792054800, "value": "Thu, 15 Oct 26 09:00:00 +0000" },
+              "endTime": { "timestamp": 1792056600, "value": "Thu, 15 Oct 26 09:30:00 +0000" },
+              "normalDuration": 30,
+              "duration": 30,
+              "remainingTime": 0,
+              "status": { "value": 1, "label": "Scheduled" }
+            },
+            "status": null
+          },
+          "status": { "relativeWaterBalance": 0, "suspendedUntil": null }
+        },
+        {
+          "id": 220002,
+          "number": { "value": 2, "label": "Zone 2" },
+          "name": "Vegetable Garden",
+          "scheduledRuns": {
+            "summary": "",
+            "currentRun": {
+              "id": "220002-1792051080",
+              "startTime": { "timestamp": 1792051080, "value": "Thu, 15 Oct 26 07:58:00 +0000" },
+              "endTime": { "timestamp": 1792052880, "value": "Thu, 15 Oct 26 08:28:00 +0000" },
+              "normalDuration": 30,
+              "duration": 30,
+              "remainingTime": 1680,
+              "status": { "value": 2, "label": "Running" }
+            },
+            "nextRun": null,
+            "status": null
+          },
+          "status": { "relativeWaterBalance": 0, "suspendedUntil": null }
+        },
+        {
+          "id": 220003,
+          "number": { "value": 3, "label": "Zone 3" },
+          "name": "Back Lawn",
+          "scheduledRuns": { "summary": "", "currentRun": null, "nextRun": null, "status": null },
+          "status": {
+            "relativeWaterBalance": 0,
+            "suspendedUntil": { "timestamp": 1792224000, "value": "Sat, 17 Oct 26 08:00:00 +0000" }
+          }
+        }
+      ]
+    },
+    {
+      "id": 110002,
+      "name": "Greenhouse",
+      "softwareVersion": "s0",
+      "hardware": {
+        "serialNumber": "F5E6D7C8B9",
+        "version": "1.0",
+        "status": "All good!",
+        "model": { "name": "HC 6", "description": "HC 6 Station Controller" },
+        "firmware": [{ "type": "A", "version": "1.0" }]
+      },
+      "lastContactTime": { "timestamp": 1792051020, "value": "Thu, 15 Oct 26 07:57:00 +0000" },
+      "lastAction": { "timestamp": 1792050000, "value": "Thu, 15 Oct 26 07:40:00 +0000" },
+      "online": true,
+      "sensors": [],
+      "zones": [
+        {
+          "id": 220101,
+          "number": { "value": 1, "label": "Zone 1" },
+          "name": "Drip",
+          "scheduledRuns": {
+            "summary": "",
+            "currentRun": null,
+            "nextRun": {
+              "id": "220101-1792058400",
+              "startTime": { "timestamp": 1792058400, "value": "Thu, 15 Oct 26 10:00:00 +0000" },
+              "endTime": { "timestamp": 1792059300, "value": "Thu, 15 Oct 26 10:15:00 +0000" },
+              "normalDuration": 15,
+              "duration": 15,
+              "remainingTime": 0,
+              "status": { "value": 1, "label": "Scheduled" }
+            },
+            "status": null
+          },
+          "status": { "relativeWaterBalance": 0, "suspendedUntil": null }
+        },
+        {
+          "id": 220102,
+          "number": { "value": 2, "label": "Zone 2" },
+          "name": "Misting",
+          "scheduledRuns": { "summary": "", "currentRun": null, "nextRun": null, "status": null },
+          "status": { "relativeWaterBalance": 0, "suspendedUntil": null }
+        }
+      ]
+    }
+  ]
+}

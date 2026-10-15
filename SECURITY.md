@@ -30,6 +30,20 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration holds:
+
+- the Hydrawise e-mail, password and API key, in the Gladys configuration of
+  the integration (secret fields), never written to the logs nor to `/data`;
+- the Hydrawise session token (access and refresh tokens, expiry, and a
+  SHA-256 hash of the e-mail to tie it to the account), in
+  `/data/hydrawise-session.json`, mode 600. Deleting the file only forces a new
+  sign-in.
+
+What it talks to: `app.hydrawise.com` (sign-in and GraphQL API) and
+`api.hydrawise.com` (REST API, with the API key in the query string, as that
+API requires), over HTTPS only. Nothing is listened to: the container opens no
+port.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the Hydrawise service and the controllers the integration talks to.

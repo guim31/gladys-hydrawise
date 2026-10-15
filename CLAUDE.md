@@ -16,12 +16,13 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/hub.test.js              # one file
+node --test --test-name-pattern "widget"  # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
 npx github:GladysAssistant/integration-store .   # store admission checks
+node scripts/probe.mjs                    # the real cloud, read only (needs network)
 ```
 
 The CI (`.github/workflows/ci.yml`) runs `format:check`, `lint` and `test` on
@@ -31,16 +32,23 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only: registerHandlers, then connect()
+src/app.js                        every handler registered on the SDK (tests drive the same wiring)
+src/hub.js                        the account: reads on its own timer, quotas, states, commands, trigger
+src/devices.js                    one device per controller, its features, their states (NAMES: 4 languages)
+src/widgets.js                    dashboard widget `irrigation` (manifest `widgets`)
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/texts.js                      texts sent to Gladys (status, errors, toasts, dates), 4 languages
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+src/budget.js                     sliding-window request budget (GraphQL quota)
+src/store.js                      /data persistence (session token)
+src/hydrawise/                    the cloud: http.js (fetch seam), auth.js (OAuth), graphql.js,
+                                  rest.js, model.js (answers → plain model), errors.js
+scripts/probe.mjs                 read-only probe of the real cloud (no secret printed)
+gladys-assistant-integration.json manifest: name, config_schema, actions, widgets, scenes...
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
+test/                             node --test, against the SDK's fake Gladys and test/helpers/fakeHydrawise.js
+test/fixtures/hydrawise.graphql   the service schema (pydrawise's copy): test/graphql.test.js checks every query
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -56,7 +64,7 @@ test/                             node --test, against the SDK's fake Gladys (in
   writable volume. Never log tokens, passwords or API keys.
 - **Versions belong to the Release workflow** (Actions → Release). Never edit
   `version` in `package.json` or in the manifest, nor the `docker_image` tag,
-  by hand — except on the README's hand-pushed tag path, which bumps all three
+  by hand — except when a tag is pushed by hand, which bumps all three
   together before tagging. `test/manifest.test.js` checks they agree.
 - **Changelog.** Every user-visible change adds a line under `## [Unreleased]`
   in `CHANGELOG.md` (`### Added`, `Changed`, `Fixed`, `Removed`, `Security`).
@@ -70,8 +78,10 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in four languages (English, French, German with
+  "du", Spanish with "usted"): action messages, manifest texts, widget content,
+  feature names, and `docs/en.md`, `fr.md`, `de.md`, `es.md`, kept in sync with
+  the same sections. `test/i18n.test.js` enforces it.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +243,52 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Hydrawise (propre à cette intégration)
+
+Faits tirés de pydrawise (dknowles2/pydrawise, Apache 2.0, `AGENTS.md` et le code) et de
+l'intégration Home Assistant `hydrawise` ; **rien n'a été vérifié sur un vrai compte** (le proxy
+des sessions de code refuse `*.hydrawise.com` : `scripts/probe.mjs` est à lancer ailleurs).
+
+- **Deux API.** GraphQL `https://app.hydrawise.com/api/v2/graph?appVersion=…` avec un jeton
+  OAuth2 (grant `password`, `scope=all`, client public de l'appli `hydrawise_app` /
+  `zn3CrjglwNV1`, publié par pydrawise : ce n'est pas un secret de l'intégration ; jeton
+  rafraîchi 5 min avant expiration par `refresh_token`). REST v1
+  `https://api.hydrawise.com/api/v1/*.php?api_key=…` (clé du compte), toujours servie en 2026 :
+  `customerdetails.php`, `statusschedule.php`, `setzone.php`. Les identifiants de programmateur
+  et de zone sont les mêmes dans les deux API (`relay_id` = id de zone) : ce sont les
+  `platformId` des external ids.
+- **Quota GraphQL.** Hydrawise n'en publie aucun mais refuse le sondage fréquent : HA est passé
+  au client hybride (compte + clé d'API) avec le budget pydrawise **5 requêtes GraphQL / 30 min**,
+  REST pour le reste (2/min, `nextpoll`). Ce budget est repris dans `src/budget.js` ; les
+  mutations n'y sont pas comptées (HA ne les compte pas). HTTP 429 → pause de 30 min.
+- **Requête minimale.** La requête « utilisateur avec zones » complète de pydrawise renvoyait
+  des 502 sur les gros comptes (home-assistant/core#120128) : `READ_QUERY` ne demande que
+  quelques champs scalaires par zone. Tout champ ajouté doit exister dans
+  `test/fixtures/hydrawise.graphql` (le test le vérifie) ; les arguments sont des littéraux
+  (comme gql DSL), les identifiants forcés en entiers.
+- **Pièges REST** (pydrawise `Zone.update_with_json`) : `time` = 1 → en cours, `run` secondes
+  restantes ; `time` = 1576800000 ou `type` = 110 → « suspendu » **ou** retenu par un capteur de
+  pluie, sans distinction : avec le compte, ce sentinel ne crée ni n'efface jamais une
+  suspension (sinon elle clignote). Une clé d'API ne sert qu'**un** programmateur d'un compte
+  multi-programmateurs (« API key not valid » en 404 pour les autres) : on les laisse à GraphQL.
+  REST n'a pas de champ « en ligne » : dernier contact de moins d'une heure.
+- **Mutations** : `startZone(customRunDuration` en **secondes**), `suspendZone(until:` chaîne
+  `%a, %d %b %y %H:%M:%S %z`, écrite en UTC). Une réponse `status: ERROR` est un refus,
+  `WARNING` passe. Le programmateur ne récupère la commande qu'à son prochain contact avec le
+  cloud : l'état attendu est tenu 3 minutes contre une lecture contraire, sinon il clignote.
+- **Capteurs.** Pluie : règle HA (« rain sensor » dans le nom du modèle, `status.active`).
+  Débitmètre : `sensorType` FLOW ; la consommation du jour vient du rapport d'arrosage et de
+  `flowSummary` (pydrawise `get_water_use_summary`), au plus une fois par heure. Le
+  `status.waterFlow` des débitmètres n'est pas documenté (valeurs de centaines de gallons dans
+  les fixtures : un cumul, pas un débit) : **aucun débit instantané n'est publié**.
+- **Fonctionnalités.** Pas de couple Gladys « vanne d'irrigation » pilotable : la zone est un
+  `switch/binary` (allumé = arrose `run_minutes`, toujours borné, Hydrawise coupe seul), le
+  temps restant un `duration/integer` en minutes, le prochain arrosage un `text/text`, l'eau du
+  jour `water-valve/daily-irrigation-volume` en litres (gallons convertis). « En ligne » est un
+  `input/binary`. Le front ne compare que le **type** pour décider d'afficher le nom publié :
+  tous les `binary` d'un appareil portent donc leur nom.
+- **Déclencheur.** `watering_finished` ne part pas pour un arrêt commandé depuis Gladys (pas de
+  boucle par une scène), ni au premier relevé ; la durée s'arrête à la fin prévue du cycle.
+- **Fuseau.** Les dates des textes suivent `TZ` (injecté par le superviseur) ; les tests fixent
+  `TZ=UTC`. Les formats sont `en-GB`, `fr-FR`, `de-DE`, `es-ES`.

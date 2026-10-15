@@ -1,0 +1,22 @@
+{
+  "_comment": "customerdetails.php answer of pydrawise's customer_details fixture (tests/conftest.py, Apache 2.0), ids and serial numbers invented.",
+  "controller_id": 110201,
+  "customer_id": 2001,
+  "current_controller": "Home Controller",
+  "controllers": [
+    {
+      "name": "Home Controller",
+      "last_contact": 1792051140,
+      "serial_number": "A0B1C2D3E4",
+      "controller_id": 110201,
+      "status": "Unknown"
+    },
+    {
+      "name": "Other Controller",
+      "last_contact": 1792000000,
+      "serial_number": "1310B36091",
+      "controller_id": 110202,
+      "status": "Unknown"
+    }
+  ]
+}

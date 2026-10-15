@@ -1,0 +1,51 @@
+{
+  "_comment": "Answer of the water use query for controller 110001 (watering report and flow meters), in the shape of pydrawise's watering_report_json and flow_summary_json fixtures. The first run is yesterday's: outside the window, it must be left out. Times for 2026-10-15T08:00:00Z.",
+  "reports": {
+    "watering": [
+      {
+        "runEvent": {
+          "zone": { "id": 220001 },
+          "reportedStartTime": {
+            "timestamp": 1791990000,
+            "value": "Wed, 14 Oct 26 15:00:00 +0000"
+          },
+          "reportedEndTime": { "timestamp": 1791991800, "value": "Wed, 14 Oct 26 15:30:00 +0000" },
+          "reportedDuration": 1800,
+          "reportedWaterUsage": { "value": 300.5, "unit": "L" }
+        }
+      },
+      {
+        "runEvent": {
+          "zone": { "id": 220001 },
+          "reportedStartTime": {
+            "timestamp": 1792036800,
+            "value": "Thu, 15 Oct 26 04:00:00 +0000"
+          },
+          "reportedEndTime": { "timestamp": 1792038000, "value": "Thu, 15 Oct 26 04:20:00 +0000" },
+          "reportedDuration": 1200,
+          "reportedWaterUsage": { "value": 128.7, "unit": "L" }
+        }
+      },
+      {
+        "runEvent": {
+          "zone": { "id": 220002 },
+          "reportedStartTime": {
+            "timestamp": 1792038000,
+            "value": "Thu, 15 Oct 26 04:20:00 +0000"
+          },
+          "reportedEndTime": { "timestamp": 1792038600, "value": "Thu, 15 Oct 26 04:30:00 +0000" },
+          "reportedDuration": 600,
+          "reportedWaterUsage": { "value": 41.3, "unit": "L" }
+        }
+      }
+    ]
+  },
+  "sensors": [
+    { "id": 330001, "model": { "sensorType": "LEVEL_CLOSED" }, "flowSummary": null },
+    {
+      "id": 330002,
+      "model": { "sensorType": "FLOW" },
+      "flowSummary": { "totalWaterVolume": { "value": 182.5, "unit": "L" } }
+    }
+  ]
+}

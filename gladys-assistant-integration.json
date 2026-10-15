@@ -1,177 +1,723 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Hunter Hydrawise",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Hunter Hydrawise sprinkler controllers: zones, manual runs, rain delay, water use.",
+    "fr": "Programmateurs d'arrosage Hunter Hydrawise : zones, arrosage manuel, suspension, consommation.",
+    "de": "Hunter-Hydrawise-Bewässerungscomputer: Zonen, manuelle Bewässerung, Aussetzen, Verbrauch.",
+    "es": "Programadores de riego Hunter Hydrawise: zonas, riego manual, suspensión, consumo de agua."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-hydrawise:1.0.0",
+  "gladys_version": ">=5.2.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-hydrawise/main/cover.png",
+  "categories": ["appliances", "environment"],
+  "transports": ["cloud"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Hydrawise account",
+        "fr": "Votre compte Hydrawise",
+        "de": "Dein Hydrawise-Konto",
+        "es": "Su cuenta Hydrawise"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Sign in with the e-mail and password of the Hydrawise app. The API key is optional: with the account, it refreshes the zones every 2 minutes instead of 10; alone, it works without the account but shows neither sensors nor water use. Not affiliated with Hunter Industries.",
+        "fr": "Connectez-vous avec l'e-mail et le mot de passe de l'application Hydrawise. La clé d'API est facultative : avec le compte, elle rafraîchit les zones toutes les 2 minutes au lieu de 10 ; seule, elle fonctionne sans le compte mais sans capteurs ni consommation. Sans lien avec Hunter Industries.",
+        "de": "Melde dich mit der E-Mail und dem Passwort der Hydrawise-App an. Der API-Schlüssel ist optional: Mit dem Konto aktualisiert er die Zonen alle 2 statt alle 10 Minuten; allein funktioniert er ohne Konto, aber ohne Sensoren und Verbrauch. Nicht mit Hunter Industries verbunden.",
+        "es": "Conéctese con el correo y la contraseña de la aplicación Hydrawise. La clave de API es opcional: con la cuenta, actualiza las zonas cada 2 minutos en lugar de 10; sola, funciona sin la cuenta pero sin sensores ni consumo. Sin relación con Hunter Industries."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://app.hydrawise.com/",
+          "label": {
+            "en": "Hydrawise account (API key)",
+            "fr": "Compte Hydrawise (clé d'API)",
+            "de": "Hydrawise-Konto (API-Schlüssel)",
+            "es": "Cuenta Hydrawise (clave de API)"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "Account e-mail",
+        "fr": "E-mail du compte",
+        "de": "E-Mail des Kontos",
+        "es": "Correo de la cuenta"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
       "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+        "en": "The e-mail you sign in to the Hydrawise app with.",
+        "fr": "L'e-mail avec lequel vous vous connectez à l'application Hydrawise.",
+        "de": "Die E-Mail, mit der du dich in der Hydrawise-App anmeldest.",
+        "es": "El correo con el que se conecta a la aplicación Hydrawise."
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "placeholder": {
+        "en": "e.g. name@example.com",
+        "fr": "ex. nom@exemple.fr",
+        "de": "z. B. name@beispiel.de",
+        "es": "p. ej. nombre@ejemplo.es"
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe",
+        "de": "Passwort",
+        "es": "Contraseña"
+      },
+      "description": {
+        "en": "The password of the Hydrawise app. Kept by Gladys, never written in the logs.",
+        "fr": "Le mot de passe de l'application Hydrawise. Gardé par Gladys, jamais écrit dans les logs.",
+        "de": "Das Passwort der Hydrawise-App. Von Gladys gespeichert, nie in die Protokolle geschrieben.",
+        "es": "La contraseña de la aplicación Hydrawise. Guardada por Gladys, nunca escrita en los registros."
+      },
+      "required": false
+    },
+    {
+      "key": "api_key",
+      "type": "secret",
+      "label": {
+        "en": "API key (optional)",
+        "fr": "Clé d'API (facultative)",
+        "de": "API-Schlüssel (optional)",
+        "es": "Clave de API (opcional)"
+      },
+      "description": {
+        "en": "hydrawise.com, Account details, API key. Faster refresh with the account; enough alone, with fewer details.",
+        "fr": "hydrawise.com, Account details, API key. Rafraîchissement plus rapide avec le compte ; suffit seule, avec moins de détails.",
+        "de": "hydrawise.com, Account details, API key. Schnellere Aktualisierung mit dem Konto; reicht allein, mit weniger Details.",
+        "es": "hydrawise.com, Account details, API key. Actualización más rápida con la cuenta; basta sola, con menos detalles."
+      },
+      "required": false
+    },
+    {
+      "key": "run_minutes",
+      "type": "select",
+      "label": {
+        "en": "Duration of the zone switches",
+        "fr": "Durée des interrupteurs de zone",
+        "de": "Dauer der Zonenschalter",
+        "es": "Duración de los interruptores de zona"
+      },
+      "description": {
+        "en": "Turning a zone switch on waters it for this time (minutes). Also the default of the widget.",
+        "fr": "Allumer l'interrupteur d'une zone l'arrose pendant cette durée (minutes). Aussi la valeur du widget.",
+        "de": "Ein Zonenschalter bewässert die Zone so lange (Minuten). Auch der Standardwert des Widgets.",
+        "es": "Encender el interruptor de una zona la riega durante este tiempo (minutos). También el valor del widget."
+      },
+      "required": false,
+      "default": "10",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "5",
+          "label": {
+            "en": "5 min",
+            "fr": "5 min",
+            "de": "5 min",
+            "es": "5 min"
+          }
+        },
+        {
+          "value": "10",
+          "label": {
+            "en": "10 min",
+            "fr": "10 min",
+            "de": "10 min",
+            "es": "10 min"
+          }
+        },
+        {
+          "value": "15",
+          "label": {
+            "en": "15 min",
+            "fr": "15 min",
+            "de": "15 min",
+            "es": "15 min"
+          }
+        },
+        {
+          "value": "20",
+          "label": {
+            "en": "20 min",
+            "fr": "20 min",
+            "de": "20 min",
+            "es": "20 min"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 min",
+            "fr": "30 min",
+            "de": "30 min",
+            "es": "30 min"
+          }
+        },
+        {
+          "value": "45",
+          "label": {
+            "en": "45 min",
+            "fr": "45 min",
+            "de": "45 min",
+            "es": "45 min"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "60 min",
+            "fr": "60 min",
+            "de": "60 min",
+            "es": "60 min"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "suspend_days",
+      "type": "select",
+      "label": {
+        "en": "Suspension of the schedule",
+        "fr": "Suspension du programme",
+        "de": "Aussetzen des Programms",
+        "es": "Suspensión del programa"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Turning \"Automatic watering\" off suspends every zone for this many days; it then comes back on its own.",
+        "fr": "Éteindre « Arrosage automatique » suspend toutes les zones pendant ce nombre de jours ; il reprend ensuite seul.",
+        "de": "„Automatische Bewässerung“ auszuschalten setzt alle Zonen so viele Tage aus; danach läuft es von selbst weiter.",
+        "es": "Apagar «Riego automático» suspende todas las zonas durante estos días; luego se reanuda solo."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "2",
+      "options": [
+        {
+          "value": "1",
+          "label": {
+            "en": "1 day",
+            "fr": "1 jour",
+            "de": "1 Tag",
+            "es": "1 día"
+          }
+        },
+        {
+          "value": "2",
+          "label": {
+            "en": "2 days",
+            "fr": "2 jours",
+            "de": "2 Tage",
+            "es": "2 días"
+          }
+        },
+        {
+          "value": "3",
+          "label": {
+            "en": "3 days",
+            "fr": "3 jours",
+            "de": "3 Tage",
+            "es": "3 días"
+          }
+        },
+        {
+          "value": "7",
+          "label": {
+            "en": "7 days",
+            "fr": "7 jours",
+            "de": "7 Tage",
+            "es": "7 días"
+          }
+        },
+        {
+          "value": "14",
+          "label": {
+            "en": "14 days",
+            "fr": "14 jours",
+            "de": "14 Tage",
+            "es": "14 días"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 days",
+            "fr": "30 jours",
+            "de": "30 Tage",
+            "es": "30 días"
+          }
+        }
+      ]
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
+      },
+      "description": {
+        "en": "Language of the feature names and of the texts sent by the integration.",
+        "fr": "Langue des noms des fonctionnalités et des textes envoyés par l'intégration.",
+        "de": "Sprache der Funktionsnamen und der Texte, die die Integration sendet.",
+        "es": "Idioma de los nombres de las funciones y de los textos enviados por la integración."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "timeout_seconds": 60
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "watering_finished",
+      "label": {
+        "en": "Hydrawise: watering finished",
+        "fr": "Hydrawise : arrosage terminé",
+        "de": "Hydrawise: Bewässerung beendet",
+        "es": "Hydrawise: riego terminado"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A zone stopped watering on its own (end of its run or of its schedule), not by a Gladys command.",
+        "fr": "Une zone a fini d'arroser d'elle-même (fin de sa durée ou de son programme), pas sur commande de Gladys.",
+        "de": "Eine Zone hat von selbst aufgehört (Ende ihrer Dauer oder ihres Programms), nicht durch einen Gladys-Befehl.",
+        "es": "Una zona ha dejado de regar por sí sola (fin de su duración o de su programa), no por una orden de Gladys."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
+          "label": {
+            "en": "Controller (empty: all)",
+            "fr": "Programmateur (vide : tous)",
+            "de": "Steuergerät (leer: alle)",
+            "es": "Programador (vacío: todos)"
+          },
+          "required": false
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "zone",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Zone",
+            "fr": "Zone",
+            "de": "Zone",
+            "es": "Zona"
+          }
+        },
+        {
+          "key": "zone_number",
+          "type": "number",
+          "label": {
+            "en": "Zone number",
+            "fr": "Numéro de zone",
+            "de": "Zonennummer",
+            "es": "Número de zona"
+          }
+        },
+        {
+          "key": "controller",
+          "type": "string",
+          "label": {
+            "en": "Controller",
+            "fr": "Programmateur",
+            "de": "Steuergerät",
+            "es": "Programador"
+          }
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "Watering time (min)",
+            "fr": "Durée d'arrosage (min)",
+            "de": "Bewässerungsdauer (min)",
+            "es": "Duración del riego (min)"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "start_zone",
+      "label": {
+        "en": "Hydrawise: water a zone",
+        "fr": "Hydrawise : arroser une zone",
+        "de": "Hydrawise: Zone bewässern",
+        "es": "Hydrawise: regar una zona"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Water one zone for a number of minutes; it stops on its own.",
+        "fr": "Arrose une zone pendant un nombre de minutes ; elle s'arrête seule.",
+        "de": "Bewässert eine Zone für einige Minuten; sie stoppt von selbst.",
+        "es": "Riega una zona durante unos minutos; se detiene sola."
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Controller (empty: the only one)",
+            "fr": "Programmateur (vide : le seul)",
+            "de": "Steuergerät (leer: das einzige)",
+            "es": "Programador (vacío: el único)"
+          },
+          "required": false
+        },
+        {
+          "key": "zone",
+          "type": "string",
+          "label": {
+            "en": "Zone",
+            "fr": "Zone",
+            "de": "Zone",
+            "es": "Zona"
+          },
+          "description": {
+            "en": "The number or the name of the zone, as in Hydrawise.",
+            "fr": "Le numéro ou le nom de la zone, comme dans Hydrawise.",
+            "de": "Die Nummer oder der Name der Zone, wie in Hydrawise.",
+            "es": "El número o el nombre de la zona, como en Hydrawise."
+          },
+          "placeholder": {
+            "en": "e.g. 3 or Front lawn",
+            "fr": "ex. 3 ou Pelouse",
+            "de": "z. B. 3 oder Rasen",
+            "es": "p. ej. 3 o Césped"
+          },
           "required": true
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "Duration (minutes)",
+            "fr": "Durée (minutes)",
+            "de": "Dauer (Minuten)",
+            "es": "Duración (minutos)"
+          },
+          "required": true,
+          "default": 10,
+          "min": 1,
+          "max": 240
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "zone",
+          "type": "string",
+          "label": {
+            "en": "Zone",
+            "fr": "Zone",
+            "de": "Zone",
+            "es": "Zona"
+          }
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "Duration (minutes)",
+            "fr": "Durée (minutes)",
+            "de": "Dauer (Minuten)",
+            "es": "Duración (minutos)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "stop_watering",
+      "label": {
+        "en": "Hydrawise: stop watering",
+        "fr": "Hydrawise : arrêter l'arrosage",
+        "de": "Hydrawise: Bewässerung stoppen",
+        "es": "Hydrawise: detener el riego"
+      },
+      "description": {
+        "en": "Stop one zone, or every zone of one controller or of all of them.",
+        "fr": "Arrête une zone, ou toutes les zones d'un programmateur ou de tous.",
+        "de": "Stoppt eine Zone oder alle Zonen eines oder aller Steuergeräte.",
+        "es": "Detiene una zona, o todas las zonas de un programador o de todos."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Controller (empty: all)",
+            "fr": "Programmateur (vide : tous)",
+            "de": "Steuergerät (leer: alle)",
+            "es": "Programador (vacío: todos)"
+          },
+          "required": false
+        },
+        {
+          "key": "zone",
+          "type": "string",
+          "label": {
+            "en": "Zone (empty: all)",
+            "fr": "Zone (vide : toutes)",
+            "de": "Zone (leer: alle)",
+            "es": "Zona (vacío: todas)"
+          },
+          "description": {
+            "en": "The number or the name of the zone, as in Hydrawise.",
+            "fr": "Le numéro ou le nom de la zone, comme dans Hydrawise.",
+            "de": "Die Nummer oder der Name der Zone, wie in Hydrawise.",
+            "es": "El número o el nombre de la zona, como en Hydrawise."
+          },
+          "placeholder": {
+            "en": "e.g. 3 or Front lawn",
+            "fr": "ex. 3 ou Pelouse",
+            "de": "z. B. 3 oder Rasen",
+            "es": "p. ej. 3 o Césped"
+          },
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "key": "zones",
+          "type": "number",
+          "label": {
+            "en": "Zones stopped",
+            "fr": "Zones arrêtées",
+            "de": "Gestoppte Zonen",
+            "es": "Zonas detenidas"
+          }
+        }
+      ]
+    },
+    {
+      "key": "suspend_watering",
+      "label": {
+        "en": "Hydrawise: suspend watering",
+        "fr": "Hydrawise : suspendre l'arrosage",
+        "de": "Hydrawise: Bewässerung aussetzen",
+        "es": "Hydrawise: suspender el riego"
+      },
+      "description": {
+        "en": "Suspend the schedule for a number of days (rain delay); it comes back on its own.",
+        "fr": "Suspend le programme pendant un nombre de jours (pluie) ; il reprend seul ensuite.",
+        "de": "Setzt das Programm einige Tage aus (Regen); danach läuft es von selbst weiter.",
+        "es": "Suspende el programa durante unos días (lluvia); luego se reanuda solo."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Controller (empty: all)",
+            "fr": "Programmateur (vide : tous)",
+            "de": "Steuergerät (leer: alle)",
+            "es": "Programador (vacío: todos)"
+          },
+          "required": false
+        },
+        {
+          "key": "zone",
+          "type": "string",
+          "label": {
+            "en": "Zone (empty: all)",
+            "fr": "Zone (vide : toutes)",
+            "de": "Zone (leer: alle)",
+            "es": "Zona (vacío: todas)"
+          },
+          "description": {
+            "en": "The number or the name of the zone, as in Hydrawise.",
+            "fr": "Le numéro ou le nom de la zone, comme dans Hydrawise.",
+            "de": "Die Nummer oder der Name der Zone, wie in Hydrawise.",
+            "es": "El número o el nombre de la zona, como en Hydrawise."
+          },
+          "placeholder": {
+            "en": "e.g. 3 or Front lawn",
+            "fr": "ex. 3 ou Pelouse",
+            "de": "z. B. 3 oder Rasen",
+            "es": "p. ej. 3 o Césped"
+          },
+          "required": false
+        },
+        {
+          "key": "days",
+          "type": "number",
+          "label": {
+            "en": "Days",
+            "fr": "Jours",
+            "de": "Tage",
+            "es": "Días"
+          },
+          "required": true,
+          "default": 2,
+          "min": 1,
+          "max": 365
+        }
+      ],
+      "outputs": [
+        {
+          "key": "until",
+          "type": "string",
+          "label": {
+            "en": "Suspended until",
+            "fr": "Suspendu jusqu'au",
+            "de": "Ausgesetzt bis",
+            "es": "Suspendido hasta"
+          }
+        }
+      ]
+    },
+    {
+      "key": "resume_watering",
+      "label": {
+        "en": "Hydrawise: resume watering",
+        "fr": "Hydrawise : reprendre l'arrosage",
+        "de": "Hydrawise: Bewässerung fortsetzen",
+        "es": "Hydrawise: reanudar el riego"
+      },
+      "description": {
+        "en": "End a suspension now: the schedule runs again.",
+        "fr": "Termine une suspension maintenant : le programme reprend.",
+        "de": "Beendet ein Aussetzen sofort: Das Programm läuft wieder.",
+        "es": "Termina una suspensión ahora: el programa se reanuda."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Controller (empty: all)",
+            "fr": "Programmateur (vide : tous)",
+            "de": "Steuergerät (leer: alle)",
+            "es": "Programador (vacío: todos)"
+          },
+          "required": false
+        },
+        {
+          "key": "zone",
+          "type": "string",
+          "label": {
+            "en": "Zone (empty: all)",
+            "fr": "Zone (vide : toutes)",
+            "de": "Zone (leer: alle)",
+            "es": "Zona (vacío: todas)"
+          },
+          "description": {
+            "en": "The number or the name of the zone, as in Hydrawise.",
+            "fr": "Le numéro ou le nom de la zone, comme dans Hydrawise.",
+            "de": "Die Nummer oder der Name der Zone, wie in Hydrawise.",
+            "es": "El número o el nombre de la zona, como en Hydrawise."
+          },
+          "placeholder": {
+            "en": "e.g. 3 or Front lawn",
+            "fr": "ex. 3 ou Pelouse",
+            "de": "z. B. 3 oder Rasen",
+            "es": "p. ej. 3 o Césped"
+          },
+          "required": false
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "irrigation",
+      "label": {
+        "en": "Hydrawise",
+        "fr": "Hydrawise",
+        "de": "Hydrawise",
+        "es": "Hydrawise"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Zones watering now and next runs; water, stop, suspend or resume.",
+        "fr": "Zones en arrosage et prochains arrosages ; arroser, arrêter, suspendre, reprendre.",
+        "de": "Laufende und nächste Bewässerungen; bewässern, stoppen, aussetzen, fortsetzen.",
+        "es": "Zonas regando y próximos riegos; regar, detener, suspender o reanudar."
+      },
+      "icon": "droplet",
+      "action_timeout_seconds": 30,
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Controller (empty: all)",
+            "fr": "Programmateur (vide : tous)",
+            "de": "Steuergerät (leer: alle)",
+            "es": "Programador (vacío: todos)"
+          },
+          "required": false
+        }
+      ]
     }
   ]
 }
