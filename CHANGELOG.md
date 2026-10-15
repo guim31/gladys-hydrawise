@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-15
+
 ### Added
 
 - Hunter Hydrawise sprinkler controllers through the Hydrawise cloud: sign-in
@@ -34,4 +36,5 @@ the notes of the version's GitHub Release.
 - Every text in English, French, German and Spanish, with the documentation in
   the four languages.
 
-[Unreleased]: https://github.com/guim31/gladys-hydrawise/commits/main
+[Unreleased]: https://github.com/guim31/gladys-hydrawise/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/guim31/gladys-hydrawise/releases/tag/v1.0.1

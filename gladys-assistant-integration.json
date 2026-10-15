@@ -8,8 +8,8 @@
     "de": "Hunter-Hydrawise-Bewässerungscomputer: Zonen, manuelle Bewässerung, Aussetzen, Verbrauch.",
     "es": "Programadores de riego Hunter Hydrawise: zonas, riego manual, suspensión, consumo de agua."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/guim31/gladys-hydrawise:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/guim31/gladys-hydrawise:1.0.1",
   "gladys_version": ">=5.2.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-hydrawise/main/cover.png",
   "categories": ["appliances", "environment"],
