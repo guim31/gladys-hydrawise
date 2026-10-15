@@ -1,0 +1,80 @@
+{
+  "_comment": "statusschedule.php answer of pydrawise's status_schedule fixture (tests/conftest.py, Apache 2.0), relay ids invented: zone A next run in 5400 s, B running (1788 s left), C suspended (sentinel), G held by a sensor (type 110).",
+  "expanders": [],
+  "master": 0,
+  "master_post_timer": 0,
+  "master_timer": 0,
+  "message": "",
+  "nextpoll": 60,
+  "options": 1,
+  "relays": [
+    {
+      "name": "Zone A",
+      "period": 259200,
+      "relay": 1,
+      "relay_id": 220201,
+      "run": 1800,
+      "stop": 1,
+      "time": 5400,
+      "timestr": "Sat",
+      "type": 1
+    },
+    {
+      "name": "Zone B",
+      "period": 259200,
+      "relay": 2,
+      "relay_id": 220202,
+      "run": 1788,
+      "stop": 1,
+      "time": 1,
+      "timestr": "Now",
+      "type": 106
+    },
+    {
+      "name": "Zone C",
+      "period": 259200,
+      "relay": 3,
+      "relay_id": 220203,
+      "run": 1800,
+      "stop": 1,
+      "time": 1576800000,
+      "timestr": "Sat",
+      "type": 1
+    },
+    {
+      "name": "Zone D",
+      "period": 259200,
+      "relay": 4,
+      "relay_id": 220204,
+      "run": 180,
+      "stop": 1,
+      "time": 335997,
+      "timestr": "Sat",
+      "type": 1
+    },
+    {
+      "name": "Zone G",
+      "period": 259200,
+      "relay": 7,
+      "relay_id": 220207,
+      "run": 0,
+      "stop": 1,
+      "time": 339777,
+      "timestr": "",
+      "type": 110
+    }
+  ],
+  "sensors": [
+    {
+      "input": 0,
+      "mode": 1,
+      "offtimer": 0,
+      "relays": [{ "id": 220201 }, { "id": 220202 }],
+      "timer": 0,
+      "type": 1
+    }
+  ],
+  "simRelays": 1,
+  "stupdate": 0,
+  "time": 1792051200
+}

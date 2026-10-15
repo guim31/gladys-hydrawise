@@ -1,45 +1,78 @@
 // -----------------------------------------------------------------------------
-// Integration configuration.
+// Integration configuration: defaults (they mirror the `default` values of the
+// manifest `config_schema`, see test/manifest.test.js) and normalization, so
+// the rest of the code never deals with strings, blanks or `undefined`.
 //
-// The configuration is filled in by the user in Gladys, from the `config_schema`
-// declared in `gladys-assistant-integration.json`. The SDK fetches it for you
-// (`gladys.getConfig()`) and notifies you of every change through
-// `gladys.onConfigUpdated()`.
-//
-// This module only provides defaults and normalizes the received object, so the
-// rest of the code never has to deal with `undefined`.
+// Two ways to sign in, the two the Hydrawise cloud offers:
+//   - the account (e-mail and password): the GraphQL API of the Hydrawise
+//     app, complete (sensors, water use, exact suspension dates);
+//   - the API key alone (hydrawise.com, Account details): the older REST
+//     API, zones and commands only.
+// Both together is the Home Assistant setup: GraphQL for the details, REST
+// for the frequent refreshes, which spares the small GraphQL budget.
 // -----------------------------------------------------------------------------
 
-// Defaults: they MUST stay consistent with the `default` values declared in the
-// `config_schema` of the manifest.
+export const LANGUAGES = ['en', 'fr', 'de', 'es'];
+
+// Watering duration of the zone switch, and default of the widget form, in minutes.
+export const RUN_MINUTES = ['5', '10', '15', '20', '30', '45', '60'];
+
+// How long turning the "Automatic watering" switch off suspends the schedule, in days.
+export const SUSPEND_DAYS = ['1', '2', '3', '7', '14', '30'];
+
+export const MODES = Object.freeze({
+  NONE: 'none', // nothing usable typed yet
+  ACCOUNT: 'account', // GraphQL only
+  HYBRID: 'hybrid', // GraphQL, and REST for the frequent refreshes
+  API_KEY: 'api_key', // REST only
+});
+
 export const DEFAULT_CONFIG = {
-  latitude: 48.8566, // Paris
-  longitude: 2.3522,
-  unit: 'celsius', // 'celsius' | 'fahrenheit'
-  // Seconds between two reads of the polled sensors. Gladys polls at most once
-  // a minute: slower intervals are applied by skipping polls (see
-  // createPoller in src/devices/index.js).
-  poll_frequency: 300,
-  // Reserved key (NOT in config_schema): because the manifest declares both
-  // 'local' and 'cloud' in its `transports` field, Gladys shows a standard
-  // "Prefer the local connection" toggle and sends the user's choice here.
-  // Read-only for the integration; defaults to true.
-  GLADYS_PREFER_LOCAL: true,
+  username: '',
+  password: '',
+  api_key: '',
+  run_minutes: '10',
+  suspend_days: '2',
+  language: 'fr',
 };
 
 /**
- * Merge the user config with the defaults.
- * @param {Record<string, unknown>} raw config returned by the SDK
+ * @param {Record<string, unknown>} raw the configuration returned by the SDK
  */
 export function normalizeConfig(raw = {}) {
+  const source = raw && typeof raw === 'object' ? raw : {};
+  const text = (key) => (typeof source[key] === 'string' ? source[key].trim() : '');
+  const pick = (key, list) => {
+    const value = source[key] === undefined || source[key] === null ? '' : String(source[key]);
+    return list.includes(value) ? value : DEFAULT_CONFIG[key];
+  };
+
+  const username = text('username');
+  // Passwords are kept as typed: spaces may be part of them.
+  const password = typeof source.password === 'string' ? source.password : '';
+  const apiKey = text('api_key');
+  const account = username !== '' && password !== '';
+
+  let mode = MODES.NONE;
+  if (account) {
+    mode = apiKey ? MODES.HYBRID : MODES.ACCOUNT;
+  } else if (apiKey) {
+    mode = MODES.API_KEY;
+  }
+
   return {
-    ...DEFAULT_CONFIG,
-    ...raw,
-    // Force the types: config may arrive as strings from a form.
-    latitude: Number(raw.latitude ?? DEFAULT_CONFIG.latitude),
-    longitude: Number(raw.longitude ?? DEFAULT_CONFIG.longitude),
-    poll_frequency: Number(raw.poll_frequency ?? DEFAULT_CONFIG.poll_frequency),
-    // The preference is a boolean; anything but an explicit false means true.
-    GLADYS_PREFER_LOCAL: raw.GLADYS_PREFER_LOCAL !== false,
+    mode,
+    username,
+    password,
+    apiKey,
+    // A half-typed account (an e-mail without password) is worth a message.
+    incompleteAccount: !account && (username !== '' || password !== ''),
+    runMinutes: Number(pick('run_minutes', RUN_MINUTES)),
+    suspendDays: Number(pick('suspend_days', SUSPEND_DAYS)),
+    language: LANGUAGES.includes(source.language) ? source.language : DEFAULT_CONFIG.language,
   };
 }
+
+/** What the sign-in depends on: a change means a new session. */
+export const credentialsSignature = (config) =>
+  JSON.stringify([config.mode, config.username, config.password, config.apiKey]);
